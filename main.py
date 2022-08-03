@@ -44,9 +44,9 @@ def parseArguments():
 
 def log_info(model_name, elapsed_time, best_accuracy): 
     ret_str = [
-            "model_name: {}\n".format(best_accuracy),
+            "model_name: {}\n".format(model_name),
             "elapsed_time: {}\n".format(elapsed_time),
-            "best_accuracy: {0:.2f}%\n".format(best_accuracy),
+            "best_accuracy: {:.2%}\n".format(best_accuracy),
             "---------------\n"
             ]
     return "".join(ret_str)
@@ -62,7 +62,7 @@ if __name__ == "__main__":
             "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
             "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
             "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10),
-            "inceptionv3": tf.keras.applications.InceptionV3(weights=None, input_shape=(32, 32, 3), classes=10)
+            "vgg19": tf.keras.applications.VGG19(weights=None, input_shape=(32, 32, 3), classes=10)
             }
 
     if args.is_gpu: 
