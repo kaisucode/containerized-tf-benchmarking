@@ -41,21 +41,28 @@ def parseArguments():
     args = parser.parse_args()
     return args
 
-def pretty_print_info(model_name, elapsed_time, best_accuracy): 
-    print("model_name: ", model_name)
-    print("elapsed_time: ", elapsed_time)
-    print('best_accuracy: {0:.2f}%'.format(best_accuracy))
-    print("---------------")
+
+def log_info(model_name, elapsed_time, best_accuracy): 
+    ret_str = [
+            "model_name: {}\n".format(best_accuracy),
+            "elapsed_time: {}\n".format(elapsed_time),
+            "best_accuracy: {0:.2f}%\n".format(best_accuracy),
+            "---------------\n"
+            ]
+    return "".join(ret_str)
+
 
 if __name__ == "__main__": 
 
+    logs = ""
     args = parseArguments()
 
     X_train_scaled, y_train_encoded = concat_data(*preprocess(), args.num_data)
     model_list = {
             "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
             "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
-            "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
+            "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10),
+            "inceptionv3": tf.keras.applications.InceptionV3(weights=None, input_shape=(32, 32, 3), classes=10)
             }
 
     if args.is_gpu: 
@@ -63,12 +70,13 @@ if __name__ == "__main__":
         with tf.device('/GPU:0'):
             for model_name in model_list: 
                 elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
-                pretty_print_info(model_name, elapsed_time, best_accuracy)
+                logs += log_info(model_name, elapsed_time, best_accuracy)
     else: 
         print("Benchmarking with CPU")
         with tf.device('/CPU:0'):
             for model_name in model_list: 
                 elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
-                pretty_print_info(model_name, elapsed_time, best_accuracy)
+                logs += log_info(model_name, elapsed_time, best_accuracy)
 
+    print(logs)
 
