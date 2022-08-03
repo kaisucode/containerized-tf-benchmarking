@@ -18,19 +18,6 @@ def preprocess():
 def concat_data(x, y, val): 
     return x[:val], y[:val]
 
-def get_model():
-    model = keras.Sequential([
-        keras.layers.Flatten(input_shape=(32,32,3)),
-        keras.layers.Dense(3000, activation='relu'),
-        keras.layers.Dense(1000, activation='relu'),
-        keras.layers.Dense(10, activation='sigmoid')    
-    ])
-    model.compile(optimizer='SGD',
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
-    return model
-
-
 def benchmark_model(a_model): 
 
     a_model.compile(optimizer='SGD',
@@ -38,14 +25,15 @@ def benchmark_model(a_model):
               metrics=['accuracy'])
 
     startTime = time.perf_counter()
-    hist = a_model.fit(X_train_scaled, y_train_encoded, epochs = 1)
+    hist = a_model.fit(X_train_scaled, y_train_encoded, epochs = 3)
     elapsed_time = time.perf_counter() - startTime
     #  accuracy = hist.history['accuracy'][-1]
-    best_accuracy = hist.history['accuracy'][argmin(history.history['loss'])]
+    #  print(hist.history)
+    best_accuracy = hist.history['accuracy'][np.argmin(hist.history['loss'])]
     return elapsed_time, best_accuracy
 
 
-X_train_scaled, y_train_encoded = concat_data(*preprocess(), 100)
+X_train_scaled, y_train_encoded = concat_data(*preprocess(), 10)
 #  start = time.perf_counter()
 #  elapsed = [start]
 
@@ -56,12 +44,11 @@ model_list = {
 
 with tf.device('/CPU:0'):
     for model_name in model_list: 
-
         elapsed_time, best_accuracy = benchmark_model(model_list[model_name])
+        print("---------------")
         print("model_name: ", model_name)
         print("elapsed_time: ", elapsed_time)
         print("best_accuracy: ", best_accuracy)
-        print("---------------")
 
 #  print("elapsed: ", elapsed)
 #  for i in range(1, len(elapsed)): 
