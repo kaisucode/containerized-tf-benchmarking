@@ -3,7 +3,6 @@ import argparse
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 
 def preprocess(): 
@@ -38,6 +37,7 @@ def parseArguments():
     parser.add_argument("--num_epochs", type=int, default=10)
     parser.add_argument("--num_data", type=int, default=50)
     parser.add_argument("--is_gpu", action="store_true")
+    parser.add_argument("--has_two_gpu", action="store_true")
     args = parser.parse_args()
     return args
 
@@ -61,11 +61,18 @@ if __name__ == "__main__":
     model_list = {
             "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
             "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
-            "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10),
-            "vgg19": tf.keras.applications.VGG19(weights=None, input_shape=(32, 32, 3), classes=10)
+            "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
             }
 
-    if args.is_gpu: 
+    if args.has_two_gpu: 
+        print("Benchmarking with two GPUs")
+
+        mirrored_strategy = tf.distribute.MirroredStrategy(devices=["/GPU:0", "/GPU:1"])
+        with mirrored_strategy.scope():
+            for model_name in model_list: 
+                elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
+                logs += log_info(model_name, elapsed_time, best_accuracy)
+    elif args.is_gpu: 
         print("Benchmarking with GPU")
         with tf.device('/GPU:0'):
             for model_name in model_list: 
