@@ -19,18 +19,11 @@ def concat_data(x, y, val):
     return x[:val], y[:val]
 
 def benchmark_model(a_model, args): 
-
-    a_model.compile(optimizer='SGD',
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
-
     startTime = time.perf_counter()
     hist = a_model.fit(X_train_scaled, y_train_encoded, epochs=args.num_epochs)
     elapsed_time = time.perf_counter() - startTime
     best_accuracy = hist.history['accuracy'][np.argmin(hist.history['loss'])]
     return elapsed_time, best_accuracy
-    #  accuracy = hist.history['accuracy'][-1]
-    #  print(hist.history)
 
 def parseArguments(): 
     parser = argparse.ArgumentParser()
@@ -57,6 +50,12 @@ def load_models():
             "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
             "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
             }
+
+    for model_name in model_list: 
+        model_list[model_name].compile(optimizer='SGD',
+                loss='categorical_crossentropy',
+                metrics=['accuracy'])
+
     return model_list
 
 
@@ -70,22 +69,17 @@ if __name__ == "__main__":
     if args.has_two_gpu: 
         print("Benchmarking with two GPUs")
 
-#          device_type = "GPU"
-#  devices = tf.config.experimental.list_physical_devices(
-#          device_type)
-#  devices_names = [d.name.split(“e:”)[1] for d in devices]
-
         mirrored_strategy = tf.distribute.MirroredStrategy(devices=["/GPU:0", "/GPU:1"])
+        print("Number of devices: {}".format(mirrored_strategy.num_replicas_in_sync))
+
+        compiled_model_list = {}
         with mirrored_strategy.scope():
-            model_list = {
-                    "resnet101_warmup": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
-                    "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
-                    "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
-                    "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
-                    }
-            for model_name in model_list: 
-                elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
-                logs += log_info(model_name, elapsed_time, best_accuracy)
+            model_list = load_models()
+        for model_name in model_list: 
+            elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
+            logs += log_info(model_name, elapsed_time, best_accuracy)
+            print(logs)
+
     elif args.is_gpu: 
         print("Benchmarking with GPU")
         with tf.device('/GPU:0'):
@@ -93,6 +87,7 @@ if __name__ == "__main__":
             for model_name in model_list: 
                 elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
                 logs += log_info(model_name, elapsed_time, best_accuracy)
+                print(logs)
     else: 
         print("Benchmarking with CPU")
         with tf.device('/CPU:0'):
@@ -100,6 +95,7 @@ if __name__ == "__main__":
             for model_name in model_list: 
                 elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
                 logs += log_info(model_name, elapsed_time, best_accuracy)
+                print(logs)
 
     print(logs)
 
