@@ -13,9 +13,16 @@ This benchmarking tool uses `ResNet101`, `ResNet152`, and `VGG16` to monitor tim
 - Multi-GPU (2) benchmark example: `python main.py --num_epochs=3 --num_data=1000 --has_two_gpu`
   - This uses mirrored strategy to execute distributed training
 
-## How to run with Singularity
-- Move the desired scripts from `batch_scripts` to the project root
+## How to run with Singularity locally
+- Move the desired scripts from `batch_scripts/` to the project root
+- Run `singularity build nvidia_tf_2_6_0_py3.simg docker://nvcr.io/nvidia/tensorflow:21.12-tf2-py3` to build a container from the NVIDIA NGC catalog
+- Duplicate or modify the batch scripts for hyperparameter and hardware configuration tuning
+- Run `singularity exec --nv nvidia_tf_2_6_0_py3 python3 main.py --num_epochs=3 --num_data=1000`
+
+## How to run with Singularity using SLURM
+- Move the desired scripts from `batch_scripts/` to the project root
 - Run `singularity build nvidia_tf_2_6_0_py3.simg docker://nvcr.io/nvidia/tensorflow:21.12-tf2-py3` to build a container from the NVIDIA NGC catalog
 - Duplicate or modify the batch scripts for hyperparameter and hardware configuration tuning, as well as for your HPC cluster
+- Change `$CONTAINER` and `$SCRIPT` variables to match the NVIDIA TensorFlow container and `main.py`
 - Run `sbatch scNoGPU.sh` or `sbatch batch_script_name.sh`
 
