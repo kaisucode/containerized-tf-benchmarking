@@ -44,26 +44,11 @@ def log_info(model_name, elapsed_time, best_accuracy):
             ]
     return "".join(ret_str)
 
-def getCustomModel(): 
-    return keras.Sequential([
-        keras.layers.Conv2D(128, 3, activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=2, strides=2, padding='valid'),
-        keras.layers.Conv2D(256, 3, activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=2, strides=2, padding='valid'),
-        keras.layers.Conv2D(512, 3, activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=2, strides=2, padding='valid'),
-        keras.layers.Conv2D(64, 3, activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=2, strides=2, padding='valid'),
-        keras.layers.Reshape((-1,)),
-        keras.layers.Dense(10, activation='softmax'),
-        ])
-
 def load_models(): 
     model_list = {
-            "custom_model": getCustomModel(),
-            #  "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
-            #  "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
-            #  "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
+            "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
+            "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
+            "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
             }
 
     for model_name in model_list: 
