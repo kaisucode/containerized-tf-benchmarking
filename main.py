@@ -44,26 +44,41 @@ def log_info(model_name, elapsed_time, best_accuracy):
             ]
     return "".join(ret_str)
 
-def getCustomModel(): 
-    return keras.Sequential([
-        keras.layers.Conv2D(128, 3, activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=2, strides=2, padding='valid'),
-        keras.layers.Conv2D(256, 3, activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=2, strides=2, padding='valid'),
-        keras.layers.Conv2D(512, 3, activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=2, strides=2, padding='valid'),
-        keras.layers.Conv2D(64, 3, activation='relu'),
-        keras.layers.MaxPooling2D(pool_size=2, strides=2, padding='valid'),
-        keras.layers.Reshape((-1,)),
-        keras.layers.Dense(10, activation='softmax'),
-        ])
+def get_custom_model(): 
+
+    a_model = keras.models.Sequential()
+
+    a_model.add(tf.keras.layers.Conv2D(filters=128,kernel_size=3,padding="same", activation="relu", input_shape=[32,32,3]))
+    a_model.add(tf.keras.layers.Conv2D(filters=128,kernel_size=3,padding="same", activation="relu", input_shape=[32,32,3]))
+    a_model.add(tf.keras.layers.MaxPool2D(pool_size=2,strides=2,padding='valid'))
+    a_model.add(tf.keras.layers.Conv2D(filters=256,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.Conv2D(filters=256,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.MaxPool2D(pool_size=2,strides=2,padding='valid'))
+    a_model.add(tf.keras.layers.Conv2D(filters=1024,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.Conv2D(filters=1024,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.MaxPool2D(pool_size=2,strides=2,padding='valid'))
+    a_model.add(tf.keras.layers.Conv2D(filters=512,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.Conv2D(filters=512,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.Conv2D(filters=512,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.MaxPool2D(pool_size=2,strides=2,padding='valid'))
+    a_model.add(tf.keras.layers.Conv2D(filters=64,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.Conv2D(filters=64,kernel_size=3,padding="same", activation="relu"))
+    a_model.add(tf.keras.layers.MaxPool2D(pool_size=2,strides=2,padding='valid'))
+    a_model.add(tf.keras.layers.Flatten())
+    a_model.add(tf.keras.layers.Dropout(0.5,noise_shape=None,seed=None))
+    a_model.add(tf.keras.layers.Dense(units=128,activation='relu'))
+    a_model.add(tf.keras.layers.Dense(units=10,activation='softmax'))
+
+    print(a_model.summary())
+    return a_model
 
 def load_models(): 
     model_list = {
-            "custom_model": getCustomModel(),
-            #  "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
-            #  "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
-            #  "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
+            #  "custom_model": get_custom_model(),
+            "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
+            "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
+            "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10),
+            #  "resnet50": tf.keras.applications.ResNet50(weights=None, input_shape=(32, 32, 3), classes=10),
             }
 
     for model_name in model_list: 
