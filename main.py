@@ -51,6 +51,14 @@ def log_info(model_name, elapsed_time, best_accuracy):
             ]
     return "".join(ret_str)
 
+def load_models(): 
+    model_list = {
+            "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
+            "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
+            "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
+            }
+    return model_list
+
 
 if __name__ == "__main__": 
 
@@ -58,29 +66,37 @@ if __name__ == "__main__":
     args = parseArguments()
 
     X_train_scaled, y_train_encoded = concat_data(*preprocess(), args.num_data)
-    model_list = {
-            "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
-            "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
-            "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
-            }
 
     if args.has_two_gpu: 
         print("Benchmarking with two GPUs")
 
+#          device_type = "GPU"
+#  devices = tf.config.experimental.list_physical_devices(
+#          device_type)
+#  devices_names = [d.name.split(“e:”)[1] for d in devices]
+
         mirrored_strategy = tf.distribute.MirroredStrategy(devices=["/GPU:0", "/GPU:1"])
         with mirrored_strategy.scope():
+            model_list = {
+                    "resnet101_warmup": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
+                    "resnet101": tf.keras.applications.resnet.ResNet101(weights=None, input_shape=(32, 32, 3), classes=10),
+                    "resnet152": tf.keras.applications.resnet.ResNet152(weights=None, input_shape=(32, 32, 3), classes=10),
+                    "vgg16": tf.keras.applications.VGG16(weights=None, input_shape=(32, 32, 3), classes=10)
+                    }
             for model_name in model_list: 
                 elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
                 logs += log_info(model_name, elapsed_time, best_accuracy)
     elif args.is_gpu: 
         print("Benchmarking with GPU")
         with tf.device('/GPU:0'):
+            model_list = load_models()
             for model_name in model_list: 
                 elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
                 logs += log_info(model_name, elapsed_time, best_accuracy)
     else: 
         print("Benchmarking with CPU")
         with tf.device('/CPU:0'):
+            model_list = load_models()
             for model_name in model_list: 
                 elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
                 logs += log_info(model_name, elapsed_time, best_accuracy)
