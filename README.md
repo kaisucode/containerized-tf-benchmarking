@@ -1,14 +1,14 @@
 
 ## About
-This benchmarking tool uses `ResNet101`, `ResNet152`, and `VGG16` monitor time elapsed and accuracy of TensorFlow on high performance computing clusters. The CIFAR10 dataset is used as the input. Additonal models can be included by modifying the `load_model` function within `main.py`.
+This benchmarking tool uses `ResNet101`, `ResNet152`, and `VGG16` to monitor time elapsed and accuracy of TensorFlow on high performance computing clusters. The CIFAR10 dataset is used as the input. Additonal models can be included by modifying the `load_model` function within `main.py`.
 
 ## Versions
 Developed with `Python 3.7.8` and `TensorFlow 2.6.0`, tested with `Singularity version 3.8.7-1.el7` on `RedHat7`
 
 ### How to run locally
-`python main.py --num_epochs=1 --num_data=50`
-`python main.py --num_epochs=1 --num_data=50 --is_gpu`
-`python main.py --num_epochs=1 --num_data=50 --has_two_gpu`
+- CPU benchmark example: `python main.py --num_epochs=1 --num_data=50`
+- GPU benchmark example: `python main.py --num_epochs=10 --num_data=10000 --is_gpu`
+- Multi-GPU (2) benchmark example: `python main.py --num_epochs=3 --num_data=1000 --has_two_gpu`
 
 ## How to run with Singularity
 - Move the desired scripts from `batch_scripts` to the project root
