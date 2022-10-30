@@ -19,8 +19,15 @@ def concat_data(x, y, val):
     return x[:val], y[:val]
 
 def benchmark_model(a_model, args): 
+    BATCH_SIZE = 5000
+
     startTime = time.perf_counter()
-    hist = a_model.fit(X_train_scaled, y_train_encoded, epochs=args.num_epochs)
+
+    if args.has_two_gpu: 
+        hist = a_model.fit(X_train_scaled, y_train_encoded, epochs=args.num_epochs, BATCH_SIZE * 2)
+    else: 
+        hist = a_model.fit(X_train_scaled, y_train_encoded, epochs=args.num_epochs, BATCH_SIZE)
+
     elapsed_time = time.perf_counter() - startTime
     best_accuracy = hist.history['accuracy'][np.argmin(hist.history['loss'])]
     return elapsed_time, best_accuracy
