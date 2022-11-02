@@ -5,29 +5,25 @@ from tensorflow import keras
 import numpy as np
 import time
 
-def preprocess(): 
+def preprocess(args): 
     (X_train, y_train), (X_test, y_test) = keras.datasets.cifar10.load_data()
 
-    X_train_scaled = X_train/255
-    X_test_scaled = X_test/255
-
+    X_train_scaled = X_train.astype("float32") / 255
+    X_test_scaled = X_test.astype("float32") / 255
     y_train_encoded = keras.utils.to_categorical(y_train, num_classes=10, dtype='float32')
-    y_test_encoded = keras.utils.to_categorical(y_test, num_classes=10, dtype='float32')
-    return X_train_scaled, y_train_encoded
 
-def concat_data(x, y, val): 
-    return x[:val], y[:val]
-
-def benchmark_model(a_model, args): 
-    BATCH_SIZE = 5000
-
-    startTime = time.perf_counter()
-
+    batch_size = 32
     if args.has_two_gpu: 
-        hist = a_model.fit(X_train_scaled, y_train_encoded, epochs=args.num_epochs, BATCH_SIZE * 2)
-    else: 
-        hist = a_model.fit(X_train_scaled, y_train_encoded, epochs=args.num_epochs, BATCH_SIZE)
+        batch_size *= 2
 
+    X_train_scaled = X_train_scaled[:args.num_data]
+    y_train_encoded = y_train_encoded[:args.num_data]
+
+    return tf.data.Dataset.from_tensor_slices((X_train_scaled, y_train_encoded)).batch(batch_size)
+
+def benchmark_model(a_model, train_dataset, args): 
+    startTime = time.perf_counter()
+    hist = a_model.fit(train_dataset, epochs=args.num_epochs)
     elapsed_time = time.perf_counter() - startTime
     best_accuracy = hist.history['accuracy'][np.argmin(hist.history['loss'])]
     return elapsed_time, best_accuracy
@@ -89,7 +85,8 @@ def load_models():
             }
 
     for model_name in model_list: 
-        model_list[model_name].compile(optimizer='SGD',
+        model_list[model_name].compile(
+                optimizer='SGD',
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
 
@@ -101,7 +98,7 @@ if __name__ == "__main__":
     logs = ""
     args = parseArguments()
 
-    X_train_scaled, y_train_encoded = concat_data(*preprocess(), args.num_data)
+    train_dataset = preprocess(args)
 
     if args.has_two_gpu: 
         print("Benchmarking with two GPUs")
@@ -113,7 +110,7 @@ if __name__ == "__main__":
         with mirrored_strategy.scope():
             model_list = load_models()
         for model_name in model_list: 
-            elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
+            elapsed_time, best_accuracy = benchmark_model(model_list[model_name], train_dataset, args)
             logs += log_info(model_name, elapsed_time, best_accuracy)
             print(logs)
 
@@ -122,7 +119,7 @@ if __name__ == "__main__":
         with tf.device('/GPU:0'):
             model_list = load_models()
             for model_name in model_list: 
-                elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
+                elapsed_time, best_accuracy = benchmark_model(model_list[model_name], train_dataset, args)
                 logs += log_info(model_name, elapsed_time, best_accuracy)
                 print(logs)
     else: 
@@ -130,7 +127,7 @@ if __name__ == "__main__":
         with tf.device('/CPU:0'):
             model_list = load_models()
             for model_name in model_list: 
-                elapsed_time, best_accuracy = benchmark_model(model_list[model_name], args)
+                elapsed_time, best_accuracy = benchmark_model(model_list[model_name], train_dataset, args)
                 logs += log_info(model_name, elapsed_time, best_accuracy)
                 print(logs)
 
